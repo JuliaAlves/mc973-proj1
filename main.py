@@ -5,7 +5,7 @@ unary_ops = {'NOT'}
 circuit = {}
 signal_values = {}
 timeline = {}
-delta = 0
+delta = 1
 
 ## Reading circuit
 f = open("tests/01/circuito.hdl", "r")
@@ -146,6 +146,16 @@ while running:
         print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
 
     else:
+        
+        if time > 0:
+            tmp_signals = signal_values.copy()
+            
+            for signal in signal_values:
+                tmp_signals[signal] = evaluate_1(signal)
+        
+            # Copy evaluated values to 
+            for s in tmp_signals:
+                signal_values[s] = tmp_signals[s]
 
         # Assigning new values acording to timeline
         if time in timeline:
@@ -153,16 +163,6 @@ while running:
                 signal_values[signal] = timeline[time][signal]
 
         print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
-
-        tmp_signals = signal_values.copy()
-        
-        for signal in signal_values:
-            tmp_signals[signal] = evaluate_1(signal)
-    
-        # Copy evaluated values to 
-        for s in tmp_signals:
-            signal_values[s] = tmp_signals[s]
-
 
     if old_sv == signal_values:
         running = False
