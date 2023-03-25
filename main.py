@@ -1,11 +1,13 @@
 import sys
 import os
+import csv
 
 # Constants
 unary_ops = {'NOT'}
 TESTS_PATH = "./tests" 
 STIM_FILE = "estimulos.txt"
-CIRC_FILE = "circuito.hdl" 
+CIRC_FILE = "circuito.hdl"
+RESULT_FILE_PREFIX = "saida"
 
 # Global
 circuit = {}
@@ -22,6 +24,8 @@ def read_circuit(circuit_file):
         circuit[signal] = operation.split()
         
         instr = f.readline()
+    
+    f.close()
 
 ## Starts signal_values with 0
 def start_signal_values():
@@ -51,6 +55,8 @@ def read_timeline(stim_file):
                 timeline[time][s] = int(v)
 
         stim = f.readline()
+
+    f.close()
 
 # print("timeline", timeline)
 # timeline {
@@ -119,8 +125,8 @@ def evaluate_1(signal):
 def dalay_0():
     running = True
     time = 0
+    result = []
 
-    print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
     while running:
 
         evaluated_signal_values = {}
@@ -139,18 +145,19 @@ def dalay_0():
         for s in evaluated_signal_values:
             signal_values[s] = evaluated_signal_values[s]
     
-        print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
+        result.append(signal_values.copy())
 
         if old_sv == signal_values:
             running = False
 
         time +=1
 
+    return result
+
 def dalay_1():
     running = True
     time = 0
-
-    print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
+    result = []
 
     while running:
         
@@ -171,12 +178,28 @@ def dalay_1():
             for signal in timeline[time]:
                 signal_values[signal] = timeline[time][signal]
 
-        print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
+        result.append(signal_values.copy())
 
         if old_sv == signal_values:
             running = False
 
         time +=1
+    
+    return result
+
+def generate_result_file(result, result_file):
+    with open(result_file, "w") as f:
+        w = csv.writer(f, delimiter=',')
+        signals = sorted(result[0])
+        signals.insert(0, 'Tempo')
+        w.writerow(signals)
+        
+        for t,r in enumerate(result):
+            values = list(r.values())
+            values.insert(0, t)
+            w.writerow(values)
+
+    f.close()
 
 def main():
     tests = os.listdir(TESTS_PATH)
@@ -188,12 +211,16 @@ def main():
         read_timeline(stim_file)
 
         start_signal_values()
-        dalay_0()
+        result0 = dalay_0()
+        result0_file = f"{TESTS_PATH}/{test}/{RESULT_FILE_PREFIX}0.csv"
+        generate_result_file(result0, result0_file)
 
         print()
 
         start_signal_values()
-        dalay_1()
+        result1 = dalay_1()
+        result1_file = f"{TESTS_PATH}/{test}/{RESULT_FILE_PREFIX}1.csv"
+        generate_result_file(result1, result1_file)
 
 if __name__ == "__main__":
     sys.exit(main())
