@@ -1,7 +1,11 @@
+# Constants
+unary_ops = {'NOT'}
+
 # Global
 circuit = {}
 signal_values = {}
 timeline = {}
+delta = 0
 
 ## Reading circuit
 f = open("tests/01/circuito.hdl", "r")
@@ -45,27 +49,125 @@ while stim != '':
 
         # stores an attribution `signal = value` in the timeline
         for s, v in zip(signals, values):
-            timeline[time][s] = v
+            timeline[time][s] = int(v)
 
     stim = f.readline()
 
 # print("timeline", timeline)
-# timeline {0: {'E': '1', 'F': '0', 'G': '1', 'H': '0'}, 1: {'F': '1'}, 2: {'G': '0', 'H': '1'}, 3: {'F': '0'}}
+# timeline {
+#   0: {'E': '1', 'F': '0', 'G': '1', 'H': '0'},
+#   1: {'F': '1'},
+#   2: {'G': '0', 'H': '1'},
+#   3: {'F': '0'}
+# }
 
 ## Simulation
+
+def calculate(operation, op1, op2=-1):
+
+    if operation == 'AND':
+        return int(op1 and op2)
+    elif operation == 'OR':
+        return int(op1 or op2)
+    elif operation == 'NAND':
+        return int(not (op1 and op2))
+    elif operation == 'NOR':
+        return int(not (op1 or op2))
+    elif operation == 'XOR':
+        return int(op1 ^ op2)
+    elif operation == 'NOT':
+        return int(not op1)
+    
+
+def evaluate_0(signal, evaluated_signal_values):
+    
+    if signal in evaluated_signal_values:
+        return evaluated_signal_values[signal]
+    
+    if signal not in circuit:
+        return signal_values[signal]
+
+    value = -1
+
+    if circuit[signal][0] in unary_ops:
+        operation, op = circuit[signal]
+        value = calculate(operation, evaluate_0(op, evaluated_signal_values))
+
+    else:
+        operation, op1, op2 = circuit[signal]
+        value = calculate(operation, evaluate_0(op1, evaluated_signal_values), evaluate_0(op2, evaluated_signal_values))
+
+    evaluated_signal_values[signal] = value
+    return value
+
+def evaluate_1(signal):
+    
+    if signal not in circuit:
+        return signal_values[signal]
+
+    value = -1
+
+    if circuit[signal][0] in unary_ops:
+        operation, op = circuit[signal]
+        value = calculate(operation, signal_values[op])
+
+    else:
+        operation, op1, op2 = circuit[signal]
+        value = calculate(operation, signal_values[op1], signal_values[op2])
+
+    return value
 
 running = True
 time = 0
 
+print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
+
 while running:
-    print(signal_values)
 
-    # values attributed directly
-    for signal in timeline[time]:
-        signal_values[signal] = timeline[time][signal]
+    evaluated_signal_values = {}
     
-    time +=1
+    old_sv = signal_values.copy()
 
-    if time > 10:
+    # Go through all signals in the circuit, calculating their new value
+    if delta == 0:
+
+        # Assigning new values acording to timeline
+        if time in timeline:
+            for signal in timeline[time]:
+                signal_values[signal] = timeline[time][signal]
+                
+        for signal in circuit:
+            evaluate_0(signal, evaluated_signal_values)
+    
+        # Copy evaluated values to 
+        for s in evaluated_signal_values:
+            signal_values[s] = evaluated_signal_values[s]
+    
+        print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
+
+    else:
+
+        # Assigning new values acording to timeline
+        if time in timeline:
+            for signal in timeline[time]:
+                signal_values[signal] = timeline[time][signal]
+
+        print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
+
+        tmp_signals = signal_values.copy()
+        
+        for signal in signal_values:
+            tmp_signals[signal] = evaluate_1(signal)
+    
+        # Copy evaluated values to 
+        for s in tmp_signals:
+            signal_values[s] = tmp_signals[s]
+
+
+    if old_sv == signal_values:
         running = False
 
+    time +=1
+
+
+#     # values attributed directly
