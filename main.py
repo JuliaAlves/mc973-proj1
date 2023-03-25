@@ -1,57 +1,56 @@
+import sys
+import os
+
 # Constants
 unary_ops = {'NOT'}
+TESTS_PATH = "./tests" 
+STIM_FILE = "estimulos.txt"
+CIRC_FILE = "circuito.hdl" 
 
 # Global
 circuit = {}
 signal_values = {}
 timeline = {}
-delta = 1
 
 ## Reading circuit
-f = open("tests/01/circuito.hdl", "r")
-instr = f.readline()
-
-while instr != '':
-    signal, operation = instr.split(sep=" = ")
-    circuit[signal] = operation.split()
-    
+def read_circuit(circuit_file):
+    f = open(circuit_file, "r")
     instr = f.readline()
 
-# print("circuit", circuit)
-# circuit {
-#  'A': ['AND', 'B', 'C'],
-#  'B': ['OR', 'D', 'E'],
-#  'C': ['NOT', 'F'],
-#  'D': ['NAND', 'G', 'H']
-# }
+    while instr != '':
+        signal, operation = instr.split(sep=" = ")
+        circuit[signal] = operation.split()
+        
+        instr = f.readline()
 
 ## Starts signal_values with 0
-for signal in circuit:
-    tmp_signals = circuit[signal][1:]
-    tmp_signals.append(signal)
-    for s in tmp_signals:
-        signal_values[s] = 0
+def start_signal_values():
+    for signal in circuit:
+        tmp_signals = circuit[signal][1:]
+        tmp_signals.append(signal)
+        for s in tmp_signals:
+            signal_values[s] = 0
 
 ## Reading stimuly
-
-f = open("tests/01/estimulos.txt", "r")
-stim = f.readline()
-time = 0
-timeline[time] = {}
-
-while stim != '':
-
-    if stim[0] == '+':
-        time += int(stim[1:])
-        timeline[time] = {}
-    else:
-        signals, values = stim.split(sep=" = ")
-
-        # stores an attribution `signal = value` in the timeline
-        for s, v in zip(signals, values):
-            timeline[time][s] = int(v)
-
+def read_timeline(stim_file):
+    f = open(stim_file, "r")
     stim = f.readline()
+    time = 0
+    timeline[time] = {}
+
+    while stim != '':
+
+        if stim[0] == '+':
+            time += int(stim[1:])
+            timeline[time] = {}
+        else:
+            signals, values = stim.split(sep=" = ")
+
+            # stores an attribution `signal = value` in the timeline
+            for s, v in zip(signals, values):
+                timeline[time][s] = int(v)
+
+        stim = f.readline()
 
 # print("timeline", timeline)
 # timeline {
@@ -117,19 +116,16 @@ def evaluate_1(signal):
 
     return value
 
-running = True
-time = 0
+def dalay_0():
+    running = True
+    time = 0
 
-print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
+    print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
+    while running:
 
-while running:
-
-    evaluated_signal_values = {}
-    
-    old_sv = signal_values.copy()
-
-    # Go through all signals in the circuit, calculating their new value
-    if delta == 0:
+        evaluated_signal_values = {}
+        
+        old_sv = signal_values.copy()
 
         # Assigning new values acording to timeline
         if time in timeline:
@@ -145,8 +141,21 @@ while running:
     
         print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
 
-    else:
+        if old_sv == signal_values:
+            running = False
+
+        time +=1
+
+def dalay_1():
+    running = True
+    time = 0
+
+    print('Tempo,' + ','.join([x for x in sorted(signal_values)]))
+
+    while running:
         
+        old_sv = signal_values.copy()
+
         if time > 0:
             tmp_signals = signal_values.copy()
             
@@ -164,10 +173,27 @@ while running:
 
         print(time, *[str(signal_values[x]) for x in sorted(signal_values)], sep=',')
 
-    if old_sv == signal_values:
-        running = False
+        if old_sv == signal_values:
+            running = False
 
-    time +=1
+        time +=1
 
+def main():
+    tests = os.listdir(TESTS_PATH)
+    for test in tests:
+        circuit_file = f"{TESTS_PATH}/{test}/{CIRC_FILE}"
+        read_circuit(circuit_file)
 
-#     # values attributed directly
+        stim_file = f"{TESTS_PATH}/{test}/{STIM_FILE}"
+        read_timeline(stim_file)
+
+        start_signal_values()
+        dalay_0()
+
+        print()
+
+        start_signal_values()
+        dalay_1()
+
+if __name__ == "__main__":
+    sys.exit(main())
