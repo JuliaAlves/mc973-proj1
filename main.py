@@ -13,13 +13,15 @@ RESULT_FILE_PREFIX = "saida"
 
 def generate_result_file(result, result_file):
     with open(result_file, "w") as f:
-        w = csv.writer(f, delimiter=',')
+        w = csv.writer(f, delimiter=',', lineterminator='\n')
         signals = sorted(result[0])
         signals.insert(0, 'Tempo')
         w.writerow(signals)
         
         for t,r in enumerate(result):
-            values = list(r.values())
+            values = []
+            for s in sorted(r.keys()):
+                values.append(r[s])
             values.insert(0, t)
             w.writerow(values)
 
@@ -35,8 +37,6 @@ def main():
         result0 = delay_zero_simulator.run_simulation()
         result0_file = f"{TESTS_PATH}/{test}/{RESULT_FILE_PREFIX}0.csv"
         generate_result_file(result0, result0_file)
-
-        print()
 
         delay_one_simulator = DelayOneSimulator(circuit_file, stim_file)
         result1 = delay_one_simulator.run_simulation()

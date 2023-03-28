@@ -30,7 +30,7 @@ class DelayOneSimulator(Simulator):
 
             result.append(self.signal_values.copy())
 
-            if old_sv == self.signal_values:
+            if old_sv == self.signal_values and time > 0:
                 running = False
 
             time +=1
@@ -84,7 +84,7 @@ class DelayZeroSimulator(Simulator):
         
             result.append(self.signal_values.copy())
 
-            if old_sv == self.signal_values:
+            if old_sv == self.signal_values and time > 0:
                 running = False
 
             time +=1
