@@ -122,7 +122,7 @@ def evaluate_1(signal):
 
     return value
 
-def dalay_0():
+def delay_0():
     running = True
     time = 0
     result = []
@@ -154,7 +154,7 @@ def dalay_0():
 
     return result
 
-def dalay_1():
+def delay_1():
     running = True
     time = 0
     result = []
@@ -211,14 +211,14 @@ def main():
         read_timeline(stim_file)
 
         start_signal_values()
-        result0 = dalay_0()
+        result0 = delay_0()
         result0_file = f"{TESTS_PATH}/{test}/{RESULT_FILE_PREFIX}0.csv"
         generate_result_file(result0, result0_file)
 
         print()
 
         start_signal_values()
-        result1 = dalay_1()
+        result1 = delay_1()
         result1_file = f"{TESTS_PATH}/{test}/{RESULT_FILE_PREFIX}1.csv"
         generate_result_file(result1, result1_file)
 
