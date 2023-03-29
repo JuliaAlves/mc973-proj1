@@ -14,14 +14,7 @@ class DelayOneSimulator(Simulator):
             old_sv = self.signal_values.copy()
 
             if time > 0:
-                tmp_signals = self.signal_values.copy()
-                
-                for signal in self.signal_values:
-                    tmp_signals[signal] = self._evaluate_signal(signal)
-            
-                # Copy evaluated values to 
-                for s in tmp_signals:
-                    self.signal_values[s] = tmp_signals[s]
+                self._evaluate()
 
             # Assigning new values acording to timeline
             if time in self.timeline:
@@ -30,34 +23,28 @@ class DelayOneSimulator(Simulator):
 
             result.append(self.signal_values.copy())
 
-            if old_sv == self.signal_values and time > 0:
-                running = False
+            running = not self._should_stop_simulation(old_sv, time)
 
             time +=1
 
         return result
-        
-
-    def _evaluate_signal(self, signal, evaluated_signal_values = {}):
-        
-        if signal not in self.circuit:
-            return self.signal_values[signal]
-
-        value = -1
-
-        if self.circuit[signal][0] in self.unary_ops:
-            operation, op = self.circuit[signal]
-            value = self._calculate(operation, self.signal_values[op])
-
-        else:
-            operation, op1, op2 = self.circuit[signal]
-            value = self._calculate(operation, self.signal_values[op1], self.signal_values[op2])
-
-        return value
+    
+    def _evaluate(self):
+        tmp_signals = self.signal_values.copy()
+                
+        for signal in self.signal_values:
+            tmp_signals[signal] = self._evaluate_signal(signal, self.signal_values)
+    
+        # Copy evaluated values to 
+        for s in tmp_signals:
+            self.signal_values[s] = tmp_signals[s]
 
 class DelayZeroSimulator(Simulator):
-    def run_simulation(self):
+    def __init__(self, circuit_file, stim_file, max_iterations_per_clock = 10000):
+        super(DelayZeroSimulator, self).__init__(circuit_file, stim_file)
+        self.max_iterations_per_clock = max_iterations_per_clock
 
+    def run_simulation(self):
         self._start_signal_values()
 
         running = True
@@ -65,9 +52,6 @@ class DelayZeroSimulator(Simulator):
         result = []
 
         while running:
-
-            evaluated_signal_values = {}
-            
             old_sv = self.signal_values.copy()
 
             # Assigning new values acording to timeline
@@ -75,39 +59,32 @@ class DelayZeroSimulator(Simulator):
                 for signal in self.timeline[time]:
                     self.signal_values[signal] = self.timeline[time][signal]
                     
-            for signal in self.circuit:
-                self._evaluate_signal(signal, evaluated_signal_values)
-        
-            # Copy evaluated values to 
-            for s in evaluated_signal_values:
-                self.signal_values[s] = evaluated_signal_values[s]
-        
+            self._evaluate()
+
             result.append(self.signal_values.copy())
 
-            if old_sv == self.signal_values and time > 0:
-                running = False
+            running = not self._should_stop_simulation(old_sv, time)
 
             time +=1
 
         return result
-
-    def _evaluate_signal(self, signal, evaluated_signal_values):
     
-        if signal in evaluated_signal_values:
-            return evaluated_signal_values[signal]
+    def _evaluate(self):
+        is_stable = False
+        iteration_counter = 0
+        tmp_signals = self.signal_values.copy()
+
+        while not is_stable:
+            if iteration_counter >= self.max_iterations_per_clock:
+                raise Exception("Delay 0: reached max iteration in one clock")
+
+            old_signal = tmp_signals.copy()
+            for signal in self.circuit:
+                tmp_signals[signal] = self._evaluate_signal(signal, tmp_signals)
+
+            if old_signal == tmp_signals:
+                is_stable = True
         
-        if signal not in self.circuit:
-            return self.signal_values[signal]
-
-        value = -1
-
-        if self.circuit[signal][0] in self.unary_ops:
-            operation, op = self.circuit[signal]
-            value = self._calculate(operation, self._evaluate_signal(op, evaluated_signal_values))
-
-        else:
-            operation, op1, op2 = self.circuit[signal]
-            value = self._calculate(operation, self._evaluate_signal(op1, evaluated_signal_values), self._evaluate_signal(op2, evaluated_signal_values))
-
-        evaluated_signal_values[signal] = value
-        return value
+        # Copy evaluated values
+        for s in tmp_signals:
+            self.signal_values[s] = tmp_signals[s]

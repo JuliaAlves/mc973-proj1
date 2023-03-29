@@ -73,6 +73,10 @@ class Simulator:
             return int(op1 ^ op2)
         elif operation == 'NOT':
             return int(not op1)
+        
+    def _should_stop_simulation(self, last_signal_values, time):
+        return last_signal_values == self.signal_values and not any(i > time for i in self.timeline.keys())
+        
 
     def run_simulation(self) -> list:
         """Return the values of every signal in the circuit over time until they stabilize"""
@@ -83,8 +87,21 @@ class Simulator:
         Gets the value of a signal. Most importantly, adds the entry { signal: value } to
         evaluated_signal_values, that helps not to re-evaluate values for that cycle.
         """
-        pass
+        
+        if signal not in self.circuit:
+            return evaluated_signal_values[signal]
 
+        value = -1
+
+        if self.circuit[signal][0] in self.unary_ops:
+            operation, op = self.circuit[signal]
+            value = self._calculate(operation, evaluated_signal_values[op])
+
+        else:
+            operation, op1, op2 = self.circuit[signal]
+            value = self._calculate(operation, evaluated_signal_values[op1], evaluated_signal_values[op2])
+
+        return value
 
 class DelayZeroSimulator(Simulator):
     def run_simulation(self):
