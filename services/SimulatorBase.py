@@ -2,55 +2,10 @@ class Simulator:
     
     unary_ops = {'NOT'}
 
-    def __init__(self, circuit_file, stim_file):
-        self.circuit = self.read_circuit(circuit_file)
-        self.timeline = self.read_timeline(stim_file)
+    def __init__(self, circuit, timeline):
+        self.circuit = circuit
+        self.timeline = timeline
         self.signal_values = {}
-
-    ## Reading circuit
-    def read_circuit(self, circuit_file):
-        circuit = {}
-
-        f = open(circuit_file, "r")
-        instr = f.readline()
-
-        while instr != '':
-            signal, operation = instr.split(sep=" = ")
-            circuit[signal] = operation.split()
-            
-            instr = f.readline()
-        
-        f.close()
-
-        return circuit
-
-    ## Reading stimuly
-    def read_timeline(self, stim_file):
-        timeline = {}
-
-        f = open(stim_file, "r")
-        stim = f.readline()
-
-        time = 0
-        timeline[time] = {}
-
-        while stim != '':
-
-            if stim[0] == '+':
-                time += int(stim[1:])
-                timeline[time] = {}
-            else:
-                signals, values = stim.split(sep=" = ")
-
-                # stores an attribution `signal = value` in the timeline
-                for s, v in zip(signals, values):
-                    timeline[time][s] = int(v)
-
-            stim = f.readline()
-       
-        f.close()
-        
-        return timeline
 
     def _start_signal_values(self):
         for signal in self.circuit:

@@ -1,30 +1,30 @@
 from services.SimulatorImpl import DelayOneSimulator, DelayZeroSimulator
-from services.Outputer import Outputer
+from services.FileManager import FileManager
 
 import sys
 import os
 
 # Constants
-unary_ops = {'NOT'}
 TESTS_PATH = "./tests" 
 STIM_FILE = "estimulos.txt"
 CIRC_FILE = "circuito.hdl"
 RESULT_FILE_PREFIX = "saida"
 
 def main():
-    outputer = Outputer(RESULT_FILE_PREFIX, TESTS_PATH)
+    file_manager = FileManager(RESULT_FILE_PREFIX, TESTS_PATH, CIRC_FILE, STIM_FILE)
+    
     tests = os.listdir(TESTS_PATH)
     for test in tests:
-        circuit_file = f"{TESTS_PATH}/{test}/{CIRC_FILE}"
-        stim_file = f"{TESTS_PATH}/{test}/{STIM_FILE}"
+        circuit = file_manager.read_circuit_file(test)
+        timeline = file_manager.read_stim_file(test)
 
-        delay_zero_simulator = DelayZeroSimulator(circuit_file, stim_file)
+        delay_zero_simulator = DelayZeroSimulator(circuit, timeline)
         result0 = delay_zero_simulator.run_simulation()
-        outputer.generate_file(result0, test, 0)
+        file_manager.write_result_file(result0, test, 0)
 
-        delay_one_simulator = DelayOneSimulator(circuit_file, stim_file)
+        delay_one_simulator = DelayOneSimulator(circuit, timeline)
         result1 = delay_one_simulator.run_simulation()
-        outputer.generate_file(result1, test, 1)
+        file_manager.write_result_file(result1, test, 1)
 
 
 if __name__ == "__main__":

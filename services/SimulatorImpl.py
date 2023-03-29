@@ -40,8 +40,8 @@ class DelayOneSimulator(Simulator):
             self.signal_values[s] = tmp_signals[s]
 
 class DelayZeroSimulator(Simulator):
-    def __init__(self, circuit_file, stim_file, max_iterations_per_clock = 10000):
-        super(DelayZeroSimulator, self).__init__(circuit_file, stim_file)
+    def __init__(self, circuit, timeline, max_iterations_per_clock = 10000):
+        super(DelayZeroSimulator, self).__init__(circuit, timeline)
         self.max_iterations_per_clock = max_iterations_per_clock
 
     def run_simulation(self):
