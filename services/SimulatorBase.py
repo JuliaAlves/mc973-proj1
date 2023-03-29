@@ -8,6 +8,8 @@ class Simulator:
         self.signal_values = {}
 
     def _start_signal_values(self):
+        """Initialize all signals with value 0"""
+
         for signal in self.circuit:
             tmp_signals = self.circuit[signal][1:]
             tmp_signals.append(signal)
@@ -15,6 +17,7 @@ class Simulator:
                 self.signal_values[s] = 0
     
     def _calculate(self, operation, op1, op2=-1):
+        """Return the result of a given binary operation"""
 
         if operation == 'AND':
             return int(op1 and op2)
@@ -30,17 +33,17 @@ class Simulator:
             return int(not op1)
         
     def _should_stop_simulation(self, last_signal_values, time):
-        return last_signal_values == self.signal_values and not any(i > time for i in self.timeline.keys())
-        
+        """
+        Return True if the last two calculated signal values are equal and 
+        there aren't more steps on timeline
+        """
 
-    def run_simulation(self) -> list:
-        """Return the values of every signal in the circuit over time until they stabilize"""
-        pass
+        return last_signal_values == self.signal_values and not any(i > time for i in self.timeline.keys())
 
     def _evaluate_signal(self, signal: str, evaluated_signal_values: dict) -> int:
         """
-        Gets the value of a signal. Most importantly, adds the entry { signal: value } to
-        evaluated_signal_values, that helps not to re-evaluate values for that cycle.
+        Calculates the value of a signal. Most importantly, adds the entry { signal: value }
+        to evaluated_signal_values, that helps not mess up the real signal_values
         """
         
         if signal not in self.circuit:
@@ -57,3 +60,7 @@ class Simulator:
             value = self._calculate(operation, evaluated_signal_values[op1], evaluated_signal_values[op2])
 
         return value
+    
+    def run_simulation(self) -> list:
+        """Return the values of every signal in the circuit over time until they stabilize"""
+        pass
