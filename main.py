@@ -4,7 +4,7 @@ from services.FileManager import FileManager
 import sys
 import os
 
-TESTS_PATH = os.getenv("TESTS_PATH", "./tests")
+TESTS_PATH = os.getenv("TESTS_PATH", "./test")
 STIM_FILE = os.getenv("STIM_FILE", "estimulos.txt")
 CIRC_FILE = os.getenv("CIRC_FILE", "circuito.hdl")
 RESULT_FILE_PREFIX = os.getenv("RESULT_FILE_PREFIX", "saida")
