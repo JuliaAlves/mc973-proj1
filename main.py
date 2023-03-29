@@ -4,11 +4,10 @@ from services.FileManager import FileManager
 import sys
 import os
 
-# Constants
-TESTS_PATH = "./tests" 
-STIM_FILE = "estimulos.txt"
-CIRC_FILE = "circuito.hdl"
-RESULT_FILE_PREFIX = "saida"
+TESTS_PATH = os.getenv("TESTS_PATH", "./tests")
+STIM_FILE = os.getenv("STIM_FILE", "estimulos.txt")
+CIRC_FILE = os.getenv("CIRC_FILE", "circuito.hdl")
+RESULT_FILE_PREFIX = os.getenv("RESULT_FILE_PREFIX", "saida")
 
 def main():
     file_manager = FileManager(RESULT_FILE_PREFIX, TESTS_PATH, CIRC_FILE, STIM_FILE)
